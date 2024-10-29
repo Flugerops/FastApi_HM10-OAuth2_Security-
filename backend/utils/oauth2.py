@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import AsyncDB, User
@@ -14,7 +15,7 @@ async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     session: Annotated[Session, Depends(AsyncDB.get_session)],
 ):
-    user = session.get(User, token)
+    user = session.scalar(select(User).where(User.username == token))
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
